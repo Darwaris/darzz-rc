@@ -1,21 +1,27 @@
 export default async function handler(req, res) {
   try {
-    // ===== PROJECT CONFIG =====
+    // ===== CONFIG =====
     const PROJECT = {
       name: "darzz-rc",
       owner: "Waris",
-      apiKey: process.env.api_key,
-
       developer: "@DARWARIS",
       telegram: "@darzinfo",
+      apiKey: process.env.api_key, // 👈 EXACT ENV NAME
       targetApi: "https://tobi-rc-api.vercel.app/"
     };
 
-    // ===== READ PARAMS (GET / POST) =====
-    const api = req.query.api || req.body?.api;
-    const rcInput = req.query.rc || req.body?.rc;
+    // ===== READ PARAMS =====
+    const api = req.query.api;
+    const rcInput = req.query.rc;
 
-    // ===== AUTH VALIDATION =====
+    // ===== AUTH CHECK =====
+    if (!PROJECT.apiKey) {
+      return res.status(500).json({
+        status: "error",
+        message: "API key not configured on server"
+      });
+    }
+
     if (!api || api !== PROJECT.apiKey) {
       return res.status(401).json({
         status: "error",
@@ -30,27 +36,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // ===== RC NORMALIZATION =====
-    // remove spaces, hyphens, special chars; uppercase
+    // ===== NORMALIZE RC =====
     const rcNormalized = String(rcInput)
       .replace(/[^a-zA-Z0-9]/g, "")
       .toUpperCase();
 
-    // ===== CALL TARGET API (BUILT-IN FETCH) =====
+    // ===== FETCH TARGET API =====
     const response = await fetch(
-      `${PROJECT.targetApi}?rc_number=${encodeURIComponent(rcNormalized)}`,
-      {
-        method: "GET",
-        headers: {
-          "accept": "*/*",
-          "user-agent": "DARZ-RC-Proxy"
-        }
-      }
+      `${PROJECT.targetApi}?rc_number=${encodeURIComponent(rcNormalized)}`
     );
 
     const rawText = await response.text();
 
-    // ===== SAFE JSON PARSE =====
     let leak;
     try {
       leak = JSON.parse(rawText);
@@ -58,10 +55,10 @@ export default async function handler(req, res) {
       leak = rawText;
     }
 
-    // ===== FINAL ORDERED RESPONSE =====
-    return res.status(200).json({
+    // ===== ORDERED RESPONSE =====
+    const finalResponse = {
       status: "success",
-      api: PROJECT.apiKey,
+      api: api,
       query: {
         rc_input: rcInput,
         rc_normalized: rcNormalized
@@ -75,7 +72,9 @@ export default async function handler(req, res) {
         platform: "Vercel"
       },
       copyright: `© ${PROJECT.name} | Made by ${PROJECT.owner}`
-    });
+    };
+
+    return res.status(200).json(finalResponse);
 
   } catch (error) {
     return res.status(500).json({
