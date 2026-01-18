@@ -4,7 +4,7 @@ export default async function handler(req, res) {
     const PROJECT = {
       name: "darzz-rc",
       owner: "Waris",
-      apiKey: process.env.API_KEY,
+      apiKey: process.env.api_key,
 
       developer: "@DARWARIS",
       telegram: "@darzinfo",
