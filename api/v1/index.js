@@ -4,7 +4,8 @@ export default async function handler(req, res) {
     const PROJECT = {
       name: "darzz-rc",
       owner: "Waris",
-      apiKey: "DARZ",
+      apiKey: process.env.API_KEY,
+
       developer: "@DARWARIS",
       telegram: "@darzinfo",
       targetApi: "https://tobi-rc-api.vercel.app/"
